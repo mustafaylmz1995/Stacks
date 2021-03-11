@@ -1,101 +1,114 @@
 #include "StackPostPreInfix.h"
 
+int pr = 0;
+char peekVal = '\0';
+
+int findPrecedence(char ch1, char ch2);
+
+int main(void){
+
+  //Tüm örnekleri deneyelim
+  for(int i = 0; i<23; i++){
+    
+    int parantez = 0;
+
+    //Örnek üzerindeki değerleri tek tek alalım
+    for(char *temp = str[i]; *temp != '\0'; temp++){
+      
+      switch(*temp){
+        case '^':
+        case '*':
+        case '/':
+        case '%':
+        case '+':
+        case '-':          
+          if(operatorTOP >= (0+parantez) ){
+            peekVal = peek(operatorSTK, operatorTOP);
+            //0 1 -1 dönecek
+            if(findPrecedence(peekVal, *temp) >-1){
+              operandTOP = push(operandSTK, operandTOP, max, peekVal);
+              operatorTOP = pop(operatorSTK, operatorTOP);
+            }
+          }
+          operatorTOP = push(operatorSTK, operatorTOP, max, *temp);
+
+        break;
+        case '(':
+          parantez++;
+          
+        break;
+        case ')':
+          parantez--;
+          while(operatorTOP != (-1) ){
+            peekVal = peek(operatorSTK, operatorTOP);
+            operandTOP = push(operandSTK, operandTOP, max, peekVal);
+            operatorTOP = pop(operatorSTK, operatorTOP);
+          }
+
+          
+        break;
+        default:
+          //sayı ise operandSTK ekle
+          operandTOP = push(operandSTK, operandTOP, max, *temp);
+          
+        break;
+      }
 
 
-void main(void) {
-
-	// Tüm örnekleri deneyelim
-	for (int i = 17; i < 22; i++) {
-
-		int precedence = 0;
-		int islemtamam[10] = { 0 };
-		int parantez = 0;
-
-		//örnek üzerindeki karakterleri tek tek alalım
-		for (char* temp = str[i]; *temp != '\0'; temp++) {
-			
-			//operand ve operator diye ayırıp stackle
-			if (*temp == '^') {
-				precedence = 2;
-				operatorTOP = push(operatorSTK, operatorTOP, max, *temp);
-			}
-			else if (*temp == '*' ||
-					 *temp == '/') {
-				precedence = 1;
-				operatorTOP = push(operatorSTK, operatorTOP, max, *temp);
-			}
-			else if (*temp == '+' ||
-					 *temp == '-' ) {
-				precedence = 0;
-				operatorTOP = push(operatorSTK, operatorTOP, max, *temp);
-			}
-			else if (*temp == '(') {
-				//parantez açildi yeni bir alanda çalşmalıyız
-				parantez++;
-			}
-			else if (*temp == ')') {
-				//parantez kapandı islem tamamlandı parantez sayısı azaldı
-				islemtamam[parantez] = 0;
-				parantez--;
-				//parantezli kısım işlemin bir operand'ıdır.
-				islemtamam[parantez]++;
-			}
-			else {
-				//sayı ise operandSTK'a ekle
-				operandTOP = push(operandSTK, operandTOP, max, *temp);
-				islemtamam[parantez]++;
-	
-			}
-
-			//bir islem tamamlandı
-			if (islemtamam[parantez] == 2) {
-				if (precedence == 2) {
-					operandTOP = push(operandSTK, operandTOP, max, peek(operatorSTK, operatorTOP));
-					operatorTOP = pop(operatorSTK, operatorTOP);
-					
-				}
-				else if (precedence == 1) {
-					//bir sonraki operator precedence 2 olmadığından emin ol
-					if (*(temp+1) == '\0' ||
-						*(temp+1) != '^') {
-						operandTOP = push(operandSTK, operandTOP, max, peek(operatorSTK, operatorTOP));
-						operatorTOP = pop(operatorSTK, operatorTOP);
-
-						if (parantez == 0 && (operatorTOP != -1) && ((peek(operatorSTK, operatorTOP) == '+' ) || (peek(operatorSTK, operatorTOP) == '-')) ) {
-							operandTOP = push(operandSTK, operandTOP, max, peek(operatorSTK, operatorTOP));
-							operatorTOP = pop(operatorSTK, operatorTOP);
-						}
-					}
-				}
-				else {
-					//bir sonraki operatorun precedence degeri yüksek olmamalı
-					if (*(temp+1) == '\0'||	( *(temp+1) != '^' && *(temp+1) != '/' && *(temp+1) != '*') ){
-						operandTOP = push(operandSTK, operandTOP, max, peek(operatorSTK, operatorTOP));
-						operatorTOP = pop(operatorSTK, operatorTOP);
-					}
-					
-				}
-				islemtamam[parantez] = 1;
-			}
-
-		}
+    }
+    
+    while(operatorTOP != -1){
+      peekVal = peek(operatorSTK, operatorTOP);
+      operandTOP = push(operandSTK, operandTOP, max, peekVal);
+      operatorTOP = pop(operatorSTK, operatorTOP);
+    }
+    testprintf(1,"%s\n", operandSTK);
+    //testprintf(1, "%s\n", operatorSTK);
+    memset(operandSTK, '\0', (operandTOP+1)*sizeof(char));
+    memset(operatorSTK, '\0', (operatorTOP+1)*sizeof(char));
+    operandTOP = -1;
+    operatorTOP = -1;
+  }
 
 
-		//Yazdır
-		printf("\n%s", operandSTK);
-		//Stackleri temizle
-		memset(operandSTK, '\0', (operandTOP + 1) * sizeof(char));
-		operandTOP = -1;
+ 
+  return 0;
+}
 
-		memset(operatorSTK, '\0', (operatorTOP + 1) * sizeof(char));
-		operatorTOP = -1;
-
-		
-
-	}
-
-
-
+int findPrecedence(char ch1, char ch2){
+  int Pre[2];
+  char st[2];
+  st[0] = ch1;
+  st[1] = ch2;
+  for(int i = 0; i<2; i++){
+    switch(st[i]){
+      case '^':
+        Pre[i] = 4;
+      break;
+      case '*':
+        Pre[i] = 3;
+      break;
+      case '/':
+        Pre[i] = 3;
+      break;
+      case '%':
+        Pre[i] = 2;
+      break;
+      case '+':
+        Pre[i] = 1;
+      break;
+      case '-':
+        Pre[i] = 1;
+      break;
+    }
+  }
+  if(Pre[0] > Pre[1]){
+    return 1;
+  }else if(Pre[0] == Pre[1]){
+    return 0;
+  }else{
+    return -1;
+  }
 
 }
 
